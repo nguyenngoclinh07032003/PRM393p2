@@ -1,0 +1,76 @@
+{
+  "products": [
+    {
+      "name": "Điện thoại iPhone 15 Pro",
+      "description": "iPhone 15 Pro với chip A17 Pro mạnh mẽ, camera 48MP, màn hình Super Retina XDR",
+      "price": 29990000,
+      "salePrice": 27990000,
+      "stock": 50,
+      "imageUrl": "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=600&h=600&q=80",
+      "imageUrls": ["https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=600&h=600&q=80"],
+      "category": "Điện thoại",
+      "status": "active",
+      "sellerId": "YOUR_USER_ID_HERE"
+    },
+    {
+      "name": "Samsung Galaxy S24 Ultra",
+      "description": "Galaxy S24 Ultra với bút S Pen, camera 200MP, màn hình Dynamic AMOLED 2X",
+      "price": 33990000,
+      "salePrice": 31990000,
+      "stock": 40,
+      "imageUrl": "https://images.unsplash.com/photo-1610945267461-47f660fccedc?auto=format&fit=crop&w=600&h=600&q=80",
+      "imageUrls": ["https://images.unsplash.com/photo-1610945267461-47f660fccedc?auto=format&fit=crop&w=600&h=600&q=80"],
+      "category": "Điện thoại",
+      "status": "active",
+      "sellerId": "YOUR_USER_ID_HERE"
+    },
+    {
+      "name": "MacBook Air M3",
+      "description": "MacBook Air M3 với chip Apple M3, RAM 16GB, SSD 512GB, màn hình Liquid Retina",
+      "price": 34990000,
+      "salePrice": 0,
+      "stock": 25,
+      "imageUrl": "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?auto=format&fit=crop&w=600&h=600&q=80",
+      "imageUrls": ["https://images.unsplash.com/photo-1496181133206-80ce9b88a853?auto=format&fit=crop&w=600&h=600&q=80"],
+      "category": "Laptop",
+      "status": "active",
+      "sellerId": "YOUR_USER_ID_HERE"
+    },
+    {
+      "name": "iPad Pro M4 11 inch",
+      "description": "iPad Pro với chip M4, màn hình OLED Tandem, hỗ trợ Apple Pencil Pro",
+      "price": 28990000,
+      "salePrice": 27490000,
+      "stock": 35,
+      "imageUrl": "https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?auto=format&fit=crop&w=600&h=600&q=80",
+      "imageUrls": ["https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?auto=format&fit=crop&w=600&h=600&q=80"],
+      "category": "Máy tính bảng",
+      "status": "active",
+      "sellerId": "YOUR_USER_ID_HERE"
+    },
+    {
+      "name": "Tai nghe AirPods Pro 2",
+      "description": "AirPods Pro 2 với chống ồn chủ động, âm thanh không gian, thời lượng pin 30 giờ",
+      "price": 6490000,
+      "salePrice": 5990000,
+      "stock": 100,
+      "imageUrl": "https://images.unsplash.com/photo-1572569511254-4968d67e4424?auto=format&fit=crop&w=600&h=600&q=80",
+      "imageUrls": ["https://images.unsplash.com/photo-1572569511254-4968d67e4424?auto=format&fit=crop&w=600&h=600&q=80"],
+      "category": "Tai nghe",
+      "status": "active",
+      "sellerId": "YOUR_USER_ID_HERE"
+    },
+    {
+      "name": "Apple Watch Series 10",
+      "description": "Apple Watch Series 10 với màn hình luôn bật, theo dõi sức khỏe toàn diện",
+      "price": 12990000,
+      "salePrice": 11990000,
+      "stock": 60,
+      "imageUrl": "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=600&h=600&q=80",
+      "imageUrls": ["https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=600&h=600&q=80"],
+      "category": "Đồng hồ thông minh",
+      "status": "active",
+      "sellerId": "YOUR_USER_ID_HERE"
+    }
+  ]
+}
