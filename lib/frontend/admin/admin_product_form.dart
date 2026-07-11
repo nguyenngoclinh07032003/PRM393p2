@@ -48,6 +48,7 @@ class _AdminProductFormBodyState extends State<AdminProductFormBody> {
   Listenable? _pricingListenable;
   bool _isSaving = false;
   bool _isUploadingImage = false;
+  String _uploadStatusMessage = '';
   int _tierEditorGeneration = 0;
   final ProductImageService _productImageService = ProductImageService();
 
@@ -250,6 +251,13 @@ class _AdminProductFormBodyState extends State<AdminProductFormBody> {
 
   Future<void> _pickFromGallery({int? replaceIndex}) async {
     try {
+      if (mounted) {
+        setState(() {
+          _isUploadingImage = true;
+          _uploadStatusMessage = 'Đang mở thư viện ảnh...';
+        });
+      }
+
       final file = await _productImageService.pickFromGallery();
       if (file == null || !mounted) return;
 
@@ -260,11 +268,18 @@ class _AdminProductFormBodyState extends State<AdminProductFormBody> {
         return;
       }
 
-      setState(() => _isUploadingImage = true);
+      if (mounted) {
+        setState(() => _uploadStatusMessage = 'Đang nén và tải ảnh lên...');
+      }
+      await Future<void>.delayed(Duration.zero);
 
       final downloadUrl = await _productImageService.uploadImage(
         file: file,
         userId: userId,
+        onStageChanged: (message) {
+          if (!mounted) return;
+          setState(() => _uploadStatusMessage = message);
+        },
       );
 
       if (!mounted) return;
@@ -285,7 +300,12 @@ class _AdminProductFormBodyState extends State<AdminProductFormBody> {
     } catch (e) {
       if (mounted) _showError('Không tải được ảnh: $e');
     } finally {
-      if (mounted) setState(() => _isUploadingImage = false);
+      if (mounted) {
+        setState(() {
+          _isUploadingImage = false;
+          _uploadStatusMessage = '';
+        });
+      }
     }
   }
 
@@ -562,9 +582,24 @@ class _AdminProductFormBodyState extends State<AdminProductFormBody> {
           ),
           const SizedBox(height: 12),
           if (_isUploadingImage)
-            const Padding(
-              padding: EdgeInsets.only(bottom: 12),
-              child: LinearProgressIndicator(),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const LinearProgressIndicator(),
+                  if (_uploadStatusMessage.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      _uploadStatusMessage,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Color(0xFF667085),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
             ),
           Row(
             children: [
@@ -755,7 +790,12 @@ class _AdminProductFormBodyState extends State<AdminProductFormBody> {
               ),
               const SizedBox(height: 8),
               Text(
-                _isUploadingImage ? 'Đang tải...' : 'Tải ảnh lên',
+                _isUploadingImage
+                    ? (_uploadStatusMessage.isNotEmpty
+                        ? _uploadStatusMessage
+                        : 'Đang tải...')
+                    : 'Tải ảnh lên',
+                textAlign: TextAlign.center,
                 style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800),
               ),
             ],

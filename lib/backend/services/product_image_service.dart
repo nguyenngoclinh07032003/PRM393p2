@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:uuid/uuid.dart';
 
 import '../config/app_constants.dart';
+import '../utils/image_compress_utils.dart';
 
 class ProductImageService {
   ProductImageService({
@@ -11,6 +14,9 @@ class ProductImageService {
     ImagePicker? picker,
   })  : _storage = storage ?? FirebaseStorage.instance,
         _picker = picker ?? ImagePicker();
+
+  static const _maxUploadBytes = 12 * 1024 * 1024;
+  static const _uploadTimeout = Duration(seconds: 90);
 
   final FirebaseStorage _storage;
   final ImagePicker _picker;
@@ -20,8 +26,9 @@ class ProductImageService {
     try {
       return await _picker.pickImage(
         source: ImageSource.gallery,
-        imageQuality: 85,
-        maxWidth: 1600,
+        imageQuality: kIsWeb ? 75 : 85,
+        maxWidth: kIsWeb ? 1024 : 1600,
+        requestFullMetadata: false,
       );
     } catch (e) {
       debugPrint('Pick image error: $e');
@@ -32,40 +39,37 @@ class ProductImageService {
   Future<String> uploadImage({
     required XFile file,
     required String userId,
+    void Function(String message)? onStageChanged,
   }) async {
-    final bytes = await file.readAsBytes();
-    final extension = _fileExtension(file.name);
-    final fileName = '${_uuid.v4()}.$extension';
+    onStageChanged?.call('Đang đọc ảnh...');
+    await Future<void>.delayed(Duration.zero);
+
+    final length = await file.length();
+    if (length > _maxUploadBytes) {
+      throw Exception('Ảnh quá lớn. Vui lòng chọn ảnh dưới 12MB.');
+    }
+
+    final rawBytes = await file.readAsBytes();
+
+    onStageChanged?.call('Đang nén ảnh...');
+    await Future<void>.delayed(Duration.zero);
+
+    final bytes = await ImageCompressUtils.compressForUpload(rawBytes);
+
+    onStageChanged?.call('Đang tải ảnh lên...');
+
+    final fileName = '${_uuid.v4()}.jpg';
     final path =
         '${AppConstants.productImagesStoragePath}/$userId/$fileName';
 
     final ref = _storage.ref().child(path);
-    await ref.putData(
-      bytes,
-      SettableMetadata(contentType: _contentType(extension)),
-    );
-    return ref.getDownloadURL();
-  }
+    await ref
+        .putData(
+          bytes,
+          SettableMetadata(contentType: 'image/jpeg'),
+        )
+        .timeout(_uploadTimeout);
 
-  String _fileExtension(String fileName) {
-    final parts = fileName.split('.');
-    if (parts.length < 2) return 'jpg';
-    final ext = parts.last.toLowerCase();
-    if (ext == 'jpeg') return 'jpg';
-    return ext;
-  }
-
-  String _contentType(String extension) {
-    switch (extension) {
-      case 'png':
-        return 'image/png';
-      case 'webp':
-        return 'image/webp';
-      case 'gif':
-        return 'image/gif';
-      case 'jpg':
-      default:
-        return 'image/jpeg';
-    }
+    return ref.getDownloadURL().timeout(_uploadTimeout);
   }
 }
