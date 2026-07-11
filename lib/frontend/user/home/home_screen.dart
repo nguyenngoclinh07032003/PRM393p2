@@ -13,7 +13,9 @@ import '../../../backend/utils/pricing_utils.dart';
 import '../../admin/quick_seed_button.dart';
 import '../../widgets/flash_sale_countdown.dart';
 import '../../widgets/product_image.dart';
+import '../group_buy/group_buy_entry_sheet.dart';
 import '../products/product_detail_screen.dart';
+import 'home_benefit_cards.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -179,12 +181,10 @@ class _HomeScreenState extends State<HomeScreen> {
                               onSearchChanged: () => setState(() {}),
                               onFlashSaleTap: () => Navigator.pushNamed(
                                   context, AppRoutes.flashSale),
-                              onGroupBuyTap: () => Navigator.pushNamed(
-                                  context, AppRoutes.groupBuy),
-                              onRebuyTap: () =>
-                                  Navigator.pushNamed(context, AppRoutes.rebuy),
-                              onSeedTap: () => Navigator.pushNamed(
-                                  context, AppRoutes.seedData),
+                              onGroupBuyTap: () =>
+                                  showGroupBuyEntrySheet(context),
+                              onQualityCommitmentTap: () => Navigator.pushNamed(
+                                  context, AppRoutes.qualityCommitment),
                               onCategorySelected: (value) {
                                 setState(() {
                                   _selectedCategory = value;
@@ -581,8 +581,7 @@ class _HomeIntro extends StatelessWidget {
     required this.onSearchChanged,
     required this.onFlashSaleTap,
     required this.onGroupBuyTap,
-    required this.onRebuyTap,
-    required this.onSeedTap,
+    required this.onQualityCommitmentTap,
     required this.onCategorySelected,
     required this.onSortChanged,
   });
@@ -595,8 +594,7 @@ class _HomeIntro extends StatelessWidget {
   final VoidCallback onSearchChanged;
   final VoidCallback onFlashSaleTap;
   final VoidCallback onGroupBuyTap;
-  final VoidCallback onRebuyTap;
-  final VoidCallback onSeedTap;
+  final VoidCallback onQualityCommitmentTap;
   final ValueChanged<String> onCategorySelected;
   final ValueChanged<String> onSortChanged;
 
@@ -615,17 +613,17 @@ class _HomeIntro extends StatelessWidget {
             children: [
               _HeroBanner(onTap: onFlashSaleTap),
               const SizedBox(height: 18),
-              _BenefitStrip(
+              HomeBenefitStrip(
                 onGroupBuyTap: onGroupBuyTap,
-                onRebuyTap: onRebuyTap,
-                onSeedTap: onSeedTap,
-                userId: userId,
+                onFlashSaleTap: onFlashSaleTap,
+                onQualityCommitmentTap: onQualityCommitmentTap,
               ),
               const SizedBox(height: 24),
               _SectionHeading(
                 productCount: productCount,
                 sortBy: sortBy,
                 onSortChanged: onSortChanged,
+                userId: userId,
               ),
               const SizedBox(height: 14),
               _CategoryTabs(
@@ -639,33 +637,6 @@ class _HomeIntro extends StatelessWidget {
       ),
     );
   }
-}
-
-FlashSale? pickFeaturedFlashSale(List<FlashSale> sales, DateTime now) {
-  FlashSale? active;
-  FlashSale? upcoming;
-
-  for (final sale in sales) {
-    if (sale.isActive) {
-      active = sale;
-      break;
-    }
-    if (sale.isVisibleToUsers &&
-        sale.countdownStartAt(now) != null &&
-        upcoming == null) {
-      upcoming = sale;
-    }
-  }
-
-  if (active != null) return active;
-  if (upcoming != null) return upcoming;
-
-  for (final sale in sales) {
-    if (sale.countdownStartAt(now) != null && sale.countdownEndAt(now) != null) {
-      return sale;
-    }
-  }
-  return null;
 }
 
 class _HeroBanner extends StatelessWidget {
@@ -937,145 +908,6 @@ class _HeroFlashSaleClock extends StatelessWidget {
             .toList();
         return _buildClock(context, pickFeaturedFlashSale(sales, now));
       },
-    );
-  }
-}
-
-class _BenefitStrip extends StatelessWidget {
-  const _BenefitStrip({
-    required this.onGroupBuyTap,
-    required this.onRebuyTap,
-    required this.onSeedTap,
-    required this.userId,
-  });
-
-  final VoidCallback onGroupBuyTap;
-  final VoidCallback onRebuyTap;
-  final VoidCallback onSeedTap;
-  final String userId;
-
-  @override
-  Widget build(BuildContext context) {
-    final cards = [
-      _BenefitCard(
-        icon: Icons.groups_2_outlined,
-        title: 'Mua nhóm nhận deal',
-        text: 'Mua càng đông, giá càng tốt hơn.',
-        color: _HomeScreenState.accent,
-        onTap: onGroupBuyTap,
-      ),
-      _BenefitCard(
-        icon: Icons.flash_on_outlined,
-        title: 'Flash sale mỗi ngày',
-        text: 'Ưu đãi công nghệ theo khung giờ.',
-        color: _HomeScreenState.orange,
-        onTap: onRebuyTap,
-      ),
-      _BenefitCard(
-        icon: Icons.local_shipping_outlined,
-        title: 'Cam kết chất lượng',
-        text: 'Giao nhanh, hỗ trợ đổi trả rõ ràng.',
-        color: const Color(0xFF101828),
-        onTap: onSeedTap,
-        trailing: userId.isEmpty ? null : QuickSeedButton(userId: userId),
-      ),
-    ];
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        if (constraints.maxWidth < 760) {
-          return Column(
-            children: cards
-                .map(
-                  (card) => Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: card,
-                  ),
-                )
-                .toList(),
-          );
-        }
-
-        return Row(
-          children: List.generate(cards.length, (index) {
-            return Expanded(
-              child: Padding(
-                padding:
-                    EdgeInsets.only(right: index == cards.length - 1 ? 0 : 14),
-                child: cards[index],
-              ),
-            );
-          }),
-        );
-      },
-    );
-  }
-}
-
-class _BenefitCard extends StatelessWidget {
-  const _BenefitCard({
-    required this.icon,
-    required this.title,
-    required this.text,
-    required this.color,
-    required this.onTap,
-    this.trailing,
-  });
-
-  final IconData icon;
-  final String title;
-  final String text;
-  final Color color;
-  final VoidCallback onTap;
-  final Widget? trailing;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
-      child: Container(
-        constraints: const BoxConstraints(minHeight: 86),
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: color.withValues(alpha: 0.10)),
-        ),
-        child: Row(
-          children: [
-            CircleAvatar(
-              radius: 20,
-              backgroundColor: color.withValues(alpha: 0.14),
-              child: Icon(icon, color: color, size: 20),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                        fontWeight: FontWeight.w900, fontSize: 13),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    text,
-                    style:
-                        const TextStyle(color: Color(0xFF667085), fontSize: 12),
-                  ),
-                ],
-              ),
-            ),
-            if (trailing != null) ...[
-              const SizedBox(width: 10),
-              Flexible(child: trailing!),
-            ],
-          ],
-        ),
-      ),
     );
   }
 }
@@ -1405,11 +1237,13 @@ class _SectionHeading extends StatelessWidget {
     required this.productCount,
     required this.sortBy,
     required this.onSortChanged,
+    this.userId = '',
   });
 
   final int productCount;
   final String sortBy;
   final ValueChanged<String> onSortChanged;
+  final String userId;
 
   @override
   Widget build(BuildContext context) {
@@ -1424,6 +1258,10 @@ class _SectionHeading extends StatelessWidget {
           '($productCount sản phẩm)',
           style: const TextStyle(color: Color(0xFF8A94A6), fontSize: 12),
         ),
+        if (userId.isNotEmpty) ...[
+          const SizedBox(width: 12),
+          QuickSeedButton(userId: userId),
+        ],
         const Spacer(),
         const Icon(Icons.tune, size: 17, color: Color(0xFF667085)),
         const SizedBox(width: 8),

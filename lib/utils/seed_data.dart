@@ -331,23 +331,64 @@ class SeedData {
   }
 
   static Future<void> addGroupBuy() async {
-    final groupBuy = {
-      'productId': 'audio-airpods-pro-2',
-      'currentBuyerCount': 25,
-      'priceUnder50': 5790000,
-      'priceFrom50': 5490000,
-      'priceFrom100': 4990000,
-      'startTime': Timestamp.fromDate(DateTime.now()),
-      'endTime':
-          Timestamp.fromDate(DateTime.now().add(const Duration(days: 3))),
-      'status': 'active',
-      'participantIds': <String>[],
-    };
+    final now = DateTime.now();
+    final deals = [
+      {
+        'id': 'sample-group-buy-airpods',
+        'data': {
+          'productId': 'audio-airpods-pro-2',
+          'groupName': 'Nhóm AirPods Pro 2',
+          'creatorId': 'seed-user',
+          'minimumMember': 20,
+          'maximumMember': 20,
+          'currentBuyerCount': 18,
+          'currentMember': 18,
+          'originalPrice': 5790000,
+          'groupPrice': 4990000,
+          'priceUnder50': 5790000,
+          'priceFrom50': 5490000,
+          'priceFrom100': 4990000,
+          'discountPercent': 13.8,
+          'startTime': Timestamp.fromDate(now),
+          'endTime': Timestamp.fromDate(now.add(const Duration(hours: 2, minutes: 15, seconds: 30))),
+          'status': 'almost_full',
+          'groupCode': 'GD-A8K92',
+          'shareToken': 'a8k92xm7qair',
+          'participantIds': List.generate(18, (i) => 'seed-member-$i'),
+        },
+      },
+      {
+        'id': 'sample-group-buy-headset',
+        'data': {
+          'productId': 'audio-sony-wh1000xm5',
+          'groupName': 'Nhóm Tai nghe Bluetooth A',
+          'creatorId': 'seed-user-2',
+          'minimumMember': 20,
+          'maximumMember': 20,
+          'currentBuyerCount': 16,
+          'currentMember': 16,
+          'originalPrice': 8990000,
+          'groupPrice': 7190000,
+          'priceUnder50': 8990000,
+          'priceFrom50': 8090000,
+          'priceFrom100': 7190000,
+          'discountPercent': 20.0,
+          'startTime': Timestamp.fromDate(now),
+          'endTime': Timestamp.fromDate(now.add(const Duration(hours: 2, minutes: 30))),
+          'status': 'recruiting',
+          'groupCode': 'GD-SONY1',
+          'shareToken': 'sony1xm7qbt',
+          'participantIds': List.generate(16, (i) => 'seed-headset-$i'),
+        },
+      },
+    ];
 
-    await _firestore
-        .collection(AppConstants.groupBuysCollection)
-        .doc('sample-group-buy')
-        .set(groupBuy);
+    for (final deal in deals) {
+      await _firestore
+          .collection(AppConstants.groupBuysCollection)
+          .doc(deal['id'] as String)
+          .set(deal['data'] as Map<String, dynamic>);
+    }
   }
 
   static Future<void> seedAll(String sellerId) async {

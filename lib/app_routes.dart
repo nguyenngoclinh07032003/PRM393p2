@@ -8,7 +8,9 @@ class AppRoutes {
   static const orders = '/orders';
   static const flashSale = '/flash-sale';
   static const groupBuy = '/group-buy';
+  static const groupBuyInvite = '/invite/group';
   static const rebuy = '/rebuy';
+  static const qualityCommitment = '/quality-commitment';
   static const admin = '/admin';
   static const adminProducts = '/admin/products';
   static const adminAddProduct = '/admin/products/add';

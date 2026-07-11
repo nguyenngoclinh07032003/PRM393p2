@@ -6,6 +6,7 @@ import 'app_routes.dart';
 import 'backend/config/app_constants.dart';
 import 'backend/services/auth_service.dart';
 import 'backend/services/cart_service.dart';
+import 'backend/services/group_buy_service.dart';
 import 'frontend/auth/login_screen.dart';
 import 'frontend/auth/signup_screen.dart';
 import 'frontend/user/home/home_screen.dart';
@@ -13,8 +14,10 @@ import 'frontend/user/cart/cart_screen.dart';
 import 'frontend/user/checkout/checkout_screen.dart';
 import 'frontend/user/orders/order_history_screen.dart';
 import 'frontend/user/flash_sale/flash_sale_screen.dart';
+import 'frontend/user/group_buy/group_buy_invite_screen.dart';
 import 'frontend/user/group_buy/group_buy_screen.dart';
 import 'frontend/user/rebuy/rebuy_screen.dart';
+import 'frontend/user/quality_commitment/quality_commitment_screen.dart';
 import 'frontend/admin/admin_root.dart';
 import 'frontend/seller/seller_dashboard.dart';
 import 'utils/seed_data.dart';
@@ -42,6 +45,7 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthService()),
         ChangeNotifierProvider(create: (_) => CartService()),
+        ChangeNotifierProvider(create: (_) => GroupBuyService()),
       ],
       child: MaterialApp(
         title: 'SmartDeal Shop',
@@ -126,6 +130,21 @@ class MyApp extends StatelessWidget {
           ),
         ),
         initialRoute: AppRoutes.auth,
+        onGenerateRoute: (settings) {
+          final name = settings.name ?? '';
+          final invitePrefix = '${AppRoutes.groupBuyInvite}/';
+          if (name.startsWith(invitePrefix)) {
+            final token = name.substring(invitePrefix.length);
+            if (token.isNotEmpty) {
+              return MaterialPageRoute(
+                builder: (_) => _AuthRequiredRoute(
+                  child: GroupBuyInviteScreen(shareToken: token),
+                ),
+              );
+            }
+          }
+          return null;
+        },
         onUnknownRoute: (settings) => MaterialPageRoute(
           builder: (_) => Scaffold(
             body: Center(
@@ -149,6 +168,8 @@ class MyApp extends StatelessWidget {
               const _AuthRequiredRoute(child: GroupBuyScreen()),
           AppRoutes.rebuy: (_) =>
               const _AuthRequiredRoute(child: RebuyScreen()),
+          AppRoutes.qualityCommitment: (_) =>
+              const _AuthRequiredRoute(child: QualityCommitmentScreen()),
           AppRoutes.admin: (_) => const _RoleProtectedRoute(
                 allowedRoles: [AppConstants.roleAdmin],
                 child: AdminRoot(),
