@@ -7,15 +7,22 @@ class PricingUtils {
   static const int tierThreshold50 = 50;
 
   /// Áp dụng giá theo bậc số lượng (ưu tiên cấu hình trên sản phẩm).
+  /// [tierReferencePrice] là giá niêm yết gốc mà các bậc được cấu hình — dùng để
+  /// scale bậc giá khi đang Flash Sale (base thấp hơn giá gốc).
   static double applyTierDiscount(
     double unitPrice,
     int quantity, {
     List<ProductPriceTier>? tiers,
+    double? tierReferencePrice,
   }) {
     if (tiers != null && tiers.isNotEmpty) {
       final sorted = [...tiers]..sort((a, b) => a.minQty.compareTo(b.minQty));
       for (final tier in sorted) {
         if (tier.matchesQuantity(quantity)) {
+          final reference = tierReferencePrice ?? unitPrice;
+          if (reference > 0 && (reference - unitPrice).abs() > 0.01) {
+            return tier.unitPrice * (unitPrice / reference);
+          }
           return tier.unitPrice;
         }
       }
@@ -25,6 +32,16 @@ class PricingUtils {
     if (quantity >= tierThreshold50) return unitPrice * 0.90;
     if (quantity >= tierThreshold10) return unitPrice * 0.95;
     return unitPrice;
+  }
+
+  static double scaledTierUnitPrice({
+    required ProductPriceTier tier,
+    required double listedPrice,
+    required double currentBasePrice,
+  }) {
+    if (listedPrice <= 0) return tier.unitPrice;
+    if ((listedPrice - currentBasePrice).abs() <= 0.01) return tier.unitPrice;
+    return tier.unitPrice * (currentBasePrice / listedPrice);
   }
   /// Giá sau Flash Sale (tính trên giá niêm yết, không stack salePrice).
   static double flashSalePrice(double listedPrice, double discountPercent) {
@@ -137,6 +154,11 @@ class PricingUtils {
       flashSale: flashSale != null && flashSale.isActive ? flashSale : null,
       productId: product.id,
     );
-    return applyTierDiscount(base, quantity, tiers: product.priceTiers);
+    return applyTierDiscount(
+      base,
+      quantity,
+      tiers: product.priceTiers,
+      tierReferencePrice: product.price,
+    );
   }
 }

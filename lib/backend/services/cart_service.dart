@@ -264,8 +264,12 @@ class CartService extends ChangeNotifier {
       flashSale: flashSale?.isActive == true ? flashSale : null,
       productId: product.id,
     );
-    return PricingUtils.applyTierDiscount(baseUnitPrice, quantity,
-        tiers: product.priceTiers);
+    return PricingUtils.applyTierDiscount(
+      baseUnitPrice,
+      quantity,
+      tiers: product.priceTiers,
+      tierReferencePrice: product.price,
+    );
   }
 
   /// Cập nhật giá giỏ theo flash sale hiện tại (giảm khi đang sale, về giá gốc khi hết).

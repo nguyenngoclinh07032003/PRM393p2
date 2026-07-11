@@ -69,6 +69,11 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     super.dispose();
   }
 
+  double get _regularUnitPrice => PricingUtils.regularUnitPrice(
+        listedPrice: widget.product.price,
+        salePrice: widget.product.salePrice,
+      );
+
   double get _unitPriceBeforeTier {
     return PricingUtils.resolveUnitPrice(
       listedPrice: widget.product.price,
@@ -82,7 +87,18 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         _unitPriceBeforeTier,
         _quantity,
         tiers: widget.product.priceTiers,
+        tierReferencePrice: widget.product.price,
       );
+
+  double get _flashDiscountPercent {
+    if (_flashSale == null || !_flashSale!.isActive) {
+      return widget.product.discountPercent;
+    }
+    final regular = _regularUnitPrice;
+    if (regular <= 0) return _flashSale!.discountPercent;
+    final flashUnit = _unitPriceBeforeTier;
+    return ((regular - flashUnit) / regular * 100).clamp(0, 99);
+  }
 
   bool get _hasCampaignPrice =>
       (_flashSale != null && _flashSale!.isActive) ||
@@ -142,6 +158,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                     isLoadingFlashSale: _isLoadingFlashSale,
                                     displayPrice: _displayPrice,
                                     unitPriceBeforeTier: _unitPriceBeforeTier,
+                                    regularUnitPrice: _regularUnitPrice,
+                                    flashDiscountPercent: _flashDiscountPercent,
                                     hasCampaignPrice: _hasCampaignPrice,
                                     quantity: _quantity,
                                     onDecrease: _quantity > 1
@@ -530,6 +548,8 @@ class _ProductInfoPanel extends StatelessWidget {
     required this.isLoadingFlashSale,
     required this.displayPrice,
     required this.unitPriceBeforeTier,
+    required this.regularUnitPrice,
+    required this.flashDiscountPercent,
     required this.hasCampaignPrice,
     required this.quantity,
     required this.onDecrease,
@@ -545,6 +565,8 @@ class _ProductInfoPanel extends StatelessWidget {
   final bool isLoadingFlashSale;
   final double displayPrice;
   final double unitPriceBeforeTier;
+  final double regularUnitPrice;
+  final double flashDiscountPercent;
   final bool hasCampaignPrice;
   final int quantity;
   final VoidCallback? onDecrease;
@@ -555,7 +577,14 @@ class _ProductInfoPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final discount = flashSale?.discountPercent ?? product.discountPercent;
+    final discount = flashSale != null && flashSale!.isActive
+        ? flashDiscountPercent
+        : product.discountPercent;
+    final flashActive = flashSale != null && flashSale!.isActive;
+    final flashPanelSalePrice =
+        flashActive ? unitPriceBeforeTier : displayPrice;
+    final flashPanelOriginalPrice =
+        flashActive ? regularUnitPrice : unitPriceBeforeTier;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -608,9 +637,9 @@ class _ProductInfoPanel extends StatelessWidget {
           _FlashSalePanel(
             isLoading: isLoadingFlashSale,
             countdownFlashSale: countdownFlashSale,
-            active: flashSale != null && flashSale!.isActive,
-            originalPrice: unitPriceBeforeTier,
-            salePrice: displayPrice,
+            active: flashActive,
+            originalPrice: flashPanelOriginalPrice,
+            salePrice: flashPanelSalePrice,
             discountPercent: discount,
             formatCurrency: formatCurrency,
           ),
@@ -618,6 +647,7 @@ class _ProductInfoPanel extends StatelessWidget {
         ],
         _TierPriceTable(
           unitPrice: unitPriceBeforeTier,
+          listedPrice: product.price,
           quantity: quantity,
           formatCurrency: formatCurrency,
           priceTiers: product.priceTiers,
@@ -759,11 +789,13 @@ class _FlashSalePanel extends StatelessWidget {
 class _TierPriceTable extends StatelessWidget {
   const _TierPriceTable({
     required this.unitPrice,
+    required this.listedPrice,
     required this.quantity,
     required this.formatCurrency,
     this.priceTiers = const [],
   });
   final double unitPrice;
+  final double listedPrice;
   final int quantity;
   final String Function(double value) formatCurrency;
   final List<ProductPriceTier> priceTiers;
@@ -778,17 +810,28 @@ class _TierPriceTable extends StatelessWidget {
     final tiers = configuredTiers.isNotEmpty
         ? configuredTiers
             .map(
-              (tier) => (
-                tier.rangeLabel,
-                tier.unitPrice,
-                '${((1 - tier.unitPrice / unitPrice) * 100).clamp(0, 100).toStringAsFixed(0)}%',
-              ),
+              (tier) {
+                final scaled = PricingUtils.scaledTierUnitPrice(
+                  tier: tier,
+                  listedPrice: listedPrice,
+                  currentBasePrice: unitPrice,
+                );
+                return (
+                  tier.rangeLabel,
+                  scaled,
+                  '${((1 - scaled / listedPrice) * 100).clamp(0, 100).toStringAsFixed(0)}%',
+                );
+              },
             )
             .toList()
         : [
             (
               'Mua 1-9 cái',
-              PricingUtils.applyTierDiscount(unitPrice, 1),
+              PricingUtils.applyTierDiscount(
+                unitPrice,
+                1,
+                tierReferencePrice: listedPrice,
+              ),
               'Giảm 0%',
             ),
             (
