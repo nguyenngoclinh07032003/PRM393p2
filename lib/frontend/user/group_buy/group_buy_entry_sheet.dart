@@ -50,16 +50,35 @@ class _GroupBuyEntrySheetBody extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(20, 4, 20, 14),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: const [
-              Text(
+            children: [
+              const Text(
                 'Mua nhóm nhận deal',
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
               ),
-              SizedBox(height: 8),
-              Text(
+              const SizedBox(height: 8),
+              const Text(
                 'Các sản phẩm mọi người đang tham gia mua nhóm. '
                 'Bạn muốn tham gia nhóm có sẵn hay tạo nhóm mới?',
                 style: TextStyle(color: Color(0xFF667085), height: 1.45),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: () {
+                    if (userId == null) {
+                      _requireLogin(context);
+                      return;
+                    }
+                    GroupBuyFlow.startCreateGroup(context);
+                  },
+                  style: FilledButton.styleFrom(
+                    backgroundColor: const Color(0xFFF79009),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                  icon: const Icon(Icons.add_circle_outline),
+                  label: const Text('Tạo nhóm mới'),
+                ),
               ),
             ],
           ),
@@ -230,18 +249,10 @@ class _EntryProductSection extends StatelessWidget {
                     _requireLogin(context);
                     return;
                   }
-                  if (myDeal != null) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          'Bạn đã có nhóm cho sản phẩm này. '
-                          'Hãy mời thêm bạn bè hoặc tham gia nhóm khác.',
-                        ),
-                      ),
-                    );
-                    return;
-                  }
-                  GroupBuyFlow.createGroup(context, product: product);
+                  GroupBuyFlow.startCreateGroup(
+                    context,
+                    initialProduct: product,
+                  );
                 },
               ),
               if (myDeal != null) ...[
@@ -310,10 +321,26 @@ class _EmptyEntryState extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             FilledButton(
-              onPressed: onExplore,
+              onPressed: () {
+                final userId = context.read<AuthService>().currentUser?.uid;
+                if (userId == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Vui lòng đăng nhập để tạo nhóm'),
+                    ),
+                  );
+                  return;
+                }
+                GroupBuyFlow.startCreateGroup(context);
+              },
               style: FilledButton.styleFrom(
                 backgroundColor: const Color(0xFFF79009),
               ),
+              child: const Text('Tạo nhóm mới'),
+            ),
+            const SizedBox(height: 10),
+            OutlinedButton(
+              onPressed: onExplore,
               child: const Text('Khám phá deal nhóm'),
             ),
           ],

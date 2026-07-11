@@ -7,30 +7,13 @@ import '../../../backend/models/product.dart';
 import '../../../backend/services/auth_service.dart';
 import '../../../backend/services/cart_service.dart';
 import '../../../backend/services/group_buy_service.dart';
-import '../../../backend/utils/group_buy_utils.dart';
 import 'group_buy_dialogs.dart';
+import 'group_buy_product_picker_sheet.dart';
 import 'group_buy_share_sheet.dart';
 
 class GroupBuyFlow {
-  static GroupBuy previewDeal(Product product) {
-    final original = product.price;
-    final groupPrice = (original * 0.8).roundToDouble();
-    return GroupBuy(
-      id: '',
-      productId: product.id,
-      originalPrice: original,
-      groupPrice: groupPrice,
-      priceUnder50: original,
-      priceFrom50: (original * 0.9).roundToDouble(),
-      priceFrom100: groupPrice,
-      startTime: DateTime.now(),
-      endTime: DateTime.now().add(
-        const Duration(hours: AppConstants.groupBuyDurationHours),
-      ),
-      minimumMember: AppConstants.groupBuyDefaultMinMembers,
-      maximumMember: AppConstants.groupBuyDefaultMaxMembers,
-    );
-  }
+  static GroupBuy previewDeal(Product product) =>
+      GroupBuyFlowPreview.dealFor(product);
 
   static Future<String?> loadUserDisplayName(BuildContext context) async {
     final authService = Provider.of<AuthService>(context, listen: false);
@@ -42,6 +25,25 @@ class GroupBuyFlow {
         .doc(userId)
         .get();
     return doc.data()?['fullName'] as String? ?? 'Bạn';
+  }
+
+  static Future<void> startCreateGroup(
+    BuildContext context, {
+    Product? initialProduct,
+  }) async {
+    final authService = Provider.of<AuthService>(context, listen: false);
+    if (authService.currentUser?.uid == null) {
+      _showMessage(context, 'Vui lòng đăng nhập');
+      return;
+    }
+
+    final product = await showGroupBuyProductPickerSheet(
+      context,
+      initialProduct: initialProduct,
+    );
+    if (product == null || !context.mounted) return;
+
+    await createGroup(context, product: product);
   }
 
   static Future<void> createGroup(
@@ -74,6 +76,10 @@ class GroupBuyFlow {
         product: product,
         creatorDisplayName: displayName,
         quantity: dialogResult.quantity,
+        groupName: dialogResult.groupName,
+        minimumMember: dialogResult.minMembers,
+        maximumMember: dialogResult.maxMembers,
+        duration: Duration(hours: dialogResult.durationHours),
       );
 
       if (!context.mounted) return;

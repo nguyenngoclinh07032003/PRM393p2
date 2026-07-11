@@ -33,7 +33,10 @@ class _GroupBuyDetailScreenState extends State<GroupBuyDetailScreen> {
 
   Future<void> _createNewGroup() async {
     setState(() => _isLoading = true);
-    await GroupBuyFlow.createGroup(context, product: widget.product);
+    await GroupBuyFlow.startCreateGroup(
+      context,
+      initialProduct: widget.product,
+    );
     if (mounted) setState(() => _isLoading = false);
   }
 

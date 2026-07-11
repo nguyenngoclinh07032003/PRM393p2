@@ -45,6 +45,16 @@ class _GroupBuyScreenState extends State<GroupBuyScreen> {
         backgroundColor: const Color(0xFFF79009),
         foregroundColor: Colors.white,
         elevation: 0,
+        actions: [
+          TextButton.icon(
+            onPressed: () => GroupBuyFlow.startCreateGroup(context),
+            icon: const Icon(Icons.add, color: Colors.white),
+            label: const Text(
+              'Tạo nhóm',
+              style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+            ),
+          ),
+        ],
       ),
       body: StreamBuilder<List<GroupBuy>>(
         stream: groupBuyService.getActiveGroupBuys(),
@@ -134,22 +144,39 @@ class _GroupBuyScreenState extends State<GroupBuyScreen> {
   }
 
   Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.groups_2_outlined, size: 88, color: Colors.grey[400]),
-          const SizedBox(height: 16),
-          const Text(
-            'Chưa có deal mua nhóm',
-            style: TextStyle(fontSize: 18, color: Color(0xFF667085)),
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'Hãy quay lại sau hoặc seed dữ liệu mẫu từ trang chủ.',
-            style: TextStyle(color: Color(0xFF98A2B3)),
-          ),
-        ],
+  return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.groups_2_outlined, size: 88, color: Colors.grey[400]),
+            const SizedBox(height: 16),
+            const Text(
+              'Chưa có deal mua nhóm',
+              style: TextStyle(fontSize: 18, color: Color(0xFF667085)),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Tạo nhóm mới bằng cách chọn sản phẩm và cấu hình deal.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Color(0xFF98A2B3)),
+            ),
+            const SizedBox(height: 20),
+            FilledButton.icon(
+              onPressed: () => GroupBuyFlow.startCreateGroup(context),
+              style: FilledButton.styleFrom(
+                backgroundColor: const Color(0xFFF79009),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 14,
+                ),
+              ),
+              icon: const Icon(Icons.add_circle_outline),
+              label: const Text('Tạo nhóm mới'),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -447,17 +474,10 @@ class _GroupDealProductCard extends StatelessWidget {
                     userId: userId,
                   ),
                   onCreate: () {
-                    if (myDeal != null) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                            'Bạn đã có nhóm cho sản phẩm này.',
-                          ),
-                        ),
-                      );
-                      return;
-                    }
-                    GroupBuyFlow.createGroup(context, product: product);
+                    GroupBuyFlow.startCreateGroup(
+                      context,
+                      initialProduct: product,
+                    );
                   },
                 ),
                 if (myDeal != null) ...[
