@@ -109,26 +109,14 @@ class ManageOrdersBody extends StatelessWidget {
                           DataCell(AdminOrderStatusBadge(status: order.status)),
                           DataCell(
                             PopupMenuButton<String>(
-                              onSelected: (value) =>
-                                  _updateOrderStatus(order.id, value),
-                              itemBuilder: (context) => const [
-                                PopupMenuItem(
-                                  value: AppConstants.orderConfirmed,
-                                  child: Text('Xác nhận'),
-                                ),
-                                PopupMenuItem(
-                                  value: AppConstants.orderShipping,
-                                  child: Text('Đang giao'),
-                                ),
-                                PopupMenuItem(
-                                  value: AppConstants.orderDelivered,
-                                  child: Text('Đã giao'),
-                                ),
-                                PopupMenuItem(
-                                  value: AppConstants.orderCancelled,
-                                  child: Text('Hủy đơn'),
-                                ),
-                              ],
+                              onSelected: (value) => _updateOrderStatus(
+                                context,
+                                orderId: order.id,
+                                currentStatus: order.status,
+                                newStatus: value,
+                              ),
+                              itemBuilder: (context) =>
+                                  _buildOrderActionItems(order.status),
                               child: const Icon(Icons.more_horiz),
                             ),
                           ),
@@ -142,7 +130,53 @@ class ManageOrdersBody extends StatelessWidget {
     );
   }
 
-  Future<void> _updateOrderStatus(String orderId, String newStatus) async {
+  List<PopupMenuEntry<String>> _buildOrderActionItems(String status) {
+    final items = <PopupMenuEntry<String>>[
+      const PopupMenuItem(
+        value: AppConstants.orderConfirmed,
+        child: Text('Xác nhận'),
+      ),
+      const PopupMenuItem(
+        value: AppConstants.orderShipping,
+        child: Text('Đang giao'),
+      ),
+      const PopupMenuItem(
+        value: AppConstants.orderDelivered,
+        child: Text('Đã giao'),
+      ),
+    ];
+
+    final canCancel = status != AppConstants.orderDelivered &&
+        status != AppConstants.orderCancelled;
+    if (canCancel) {
+      items.add(
+        const PopupMenuItem(
+          value: AppConstants.orderCancelled,
+          child: Text('Hủy đơn'),
+        ),
+      );
+    }
+
+    return items;
+  }
+
+  Future<void> _updateOrderStatus(
+    BuildContext context, {
+    required String orderId,
+    required String currentStatus,
+    required String newStatus,
+  }) async {
+    if (newStatus == AppConstants.orderCancelled &&
+        currentStatus == AppConstants.orderDelivered) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Không thể hủy đơn hàng đã giao'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
     await FirebaseFirestore.instance
         .collection(AppConstants.ordersCollection)
         .doc(orderId)
